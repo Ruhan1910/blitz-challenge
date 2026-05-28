@@ -2,58 +2,120 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-neutral-950 text-white flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/20 rounded-full blur-[120px]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-purple-600/20 rounded-full blur-[120px]" />
-
-      <div className="z-10 text-center max-w-4xl px-4">
-        <div className="inline-block mb-4 px-4 py-1.5 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm text-sm font-semibold text-neutral-300">
-          v1.0 is live ⚡️
-        </div>
-        <h1 className="text-6xl md:text-8xl font-extrabold tracking-tight mb-8 bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-indigo-500 to-purple-600 drop-shadow-sm leading-tight">
-          BlitzChallenge
-        </h1>
-        <p className="text-xl md:text-2xl text-neutral-400 mb-12 font-medium leading-relaxed max-w-2xl mx-auto">
-          The ultimate real-time programming duel platform. Challenge your friends to solve Codeforces problems head-to-head.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-          <Link
-            href="/create"
-            className="group relative px-10 py-5 bg-white text-black font-bold text-xl rounded-full overflow-hidden shadow-[0_0_40px_-10px_rgba(255,255,255,0.4)] hover:scale-105 transition-all duration-300"
-          >
-            <span className="relative z-10 flex items-center gap-3">
-              Create a Duel
-              <svg className="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
-            </span>
-          </Link>
-        </div>
-
-        <div className="mt-28 grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-          <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 hover:-translate-y-1 transition-all duration-300">
-            <div className="w-14 h-14 rounded-2xl bg-blue-500/20 flex items-center justify-center mb-6 shadow-highlight">
-              <span className="text-blue-400 text-2xl font-extrabold">1</span>
-            </div>
-            <h3 className="text-2xl font-bold mb-3 text-white">Curate Problems</h3>
-            <p className="text-neutral-400 leading-relaxed">Select any Codeforces problems and configure custom point values to design your ultimate contest.</p>
-          </div>
-          <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 hover:-translate-y-1 transition-all duration-300">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-500/20 flex items-center justify-center mb-6">
-              <span className="text-indigo-400 text-2xl font-extrabold">2</span>
-            </div>
-            <h3 className="text-2xl font-bold mb-3 text-white">Share Link</h3>
-            <p className="text-neutral-400 leading-relaxed">Instantly generate a unique duel room and invite a challenger to compete against you in real-time.</p>
-          </div>
-          <div className="p-8 rounded-3xl bg-white/5 border border-white/10 backdrop-blur-xl hover:bg-white/10 hover:-translate-y-1 transition-all duration-300">
-            <div className="w-14 h-14 rounded-2xl bg-purple-500/20 flex items-center justify-center mb-6">
-              <span className="text-purple-400 text-2xl font-extrabold">3</span>
-            </div>
-            <h3 className="text-2xl font-bold mb-3 text-white">Race to Solve</h3>
-            <p className="text-neutral-400 leading-relaxed">First to solve secures the points. The next problem unlocks instantly. purely head-to-head.</p>
-          </div>
-        </div>
+    <main className="min-h-screen bg-neutral-950 text-white relative overflow-hidden">
+      <div className="absolute inset-0">
+        <div className="absolute -top-24 left-1/2 h-72 w-[40rem] -translate-x-1/2 rounded-full bg-emerald-500/20 blur-[140px]" />
+        <div className="absolute bottom-0 right-[-10%] h-64 w-64 rounded-full bg-amber-500/20 blur-[120px]" />
+        <div className="absolute top-24 left-10 h-40 w-40 rounded-full bg-cyan-400/10 blur-[80px]" />
       </div>
+
+      <section className="relative z-10 max-w-6xl mx-auto px-6 pt-20 pb-16">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-12">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-400/30 bg-emerald-500/10 text-emerald-200 text-sm font-semibold">
+              Vercel-ready live contests
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-300" />
+              Duels + custom virtual contests
+            </div>
+            <h1 className="mt-6 text-5xl md:text-7xl font-extrabold tracking-tight">
+              BlitzChallenge
+              <span className="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 via-cyan-300 to-amber-300">
+                Build any contest.
+              </span>
+            </h1>
+            <p className="mt-6 text-lg md:text-xl text-neutral-300 leading-relaxed">
+              Create real-time duels or craft multi-judge virtual contests with smart problem generation,
+              live tracking, and ICPC-style rankings. Built for speed, hosted on Vercel.
+            </p>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <Link
+                href="/create"
+                className="px-6 py-4 rounded-2xl bg-white text-black font-bold text-lg shadow-[0_12px_40px_-20px_rgba(255,255,255,0.7)] hover:-translate-y-0.5 transition-transform"
+              >
+                Start a Duel
+              </Link>
+              <Link
+                href="/contest/create"
+                className="px-6 py-4 rounded-2xl border border-white/20 bg-white/5 text-white font-bold text-lg hover:border-emerald-300/60 hover:text-emerald-200 transition-colors"
+              >
+                Generate Virtual Contest
+              </Link>
+            </div>
+
+            <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm text-neutral-400">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                Multi-OJ pools
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-cyan-400" />
+                Smart difficulty bands
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-amber-400" />
+                Live scoreboards
+              </div>
+            </div>
+          </div>
+
+          <div className="w-full lg:max-w-md">
+            <div className="rounded-[2.5rem] border border-white/10 bg-gradient-to-b from-white/10 to-white/5 p-6 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.7)]">
+              <div className="flex items-center justify-between text-sm text-neutral-300">
+                <span className="uppercase tracking-widest">Contest Preview</span>
+                <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-emerald-200">Live</span>
+              </div>
+              <div className="mt-6 space-y-4">
+                <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3">
+                  <p className="text-xs uppercase text-neutral-400 tracking-widest">Problems</p>
+                  <p className="text-2xl font-bold text-white">6 curated tasks</p>
+                  <p className="text-sm text-neutral-400">CF • AtCoder • CodeChef</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3">
+                  <p className="text-xs uppercase text-neutral-400 tracking-widest">Mode</p>
+                  <p className="text-2xl font-bold text-white">Blitz progression</p>
+                  <p className="text-sm text-neutral-400">Auto-unlock on first solve</p>
+                </div>
+                <div className="rounded-2xl border border-white/10 bg-black/40 px-4 py-3">
+                  <p className="text-xs uppercase text-neutral-400 tracking-widest">Tracking</p>
+                  <p className="text-2xl font-bold text-white">Cron + polling</p>
+                  <p className="text-sm text-neutral-400">Vercel-safe updates</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="relative z-10 max-w-6xl mx-auto px-6 pb-20">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {[
+            {
+              title: "Custom problem sets",
+              body: "Generate balanced difficulty curves, exclude solved tasks, and mix OJs on the fly.",
+              accent: "bg-emerald-500/20 text-emerald-200",
+            },
+            {
+              title: "Smart contest rules",
+              body: "ICPC, penalty, or score-based rules with frozen standings and first blood bonuses.",
+              accent: "bg-cyan-500/20 text-cyan-200",
+            },
+            {
+              title: "Live tracking",
+              body: "Submission polling + cron refreshes keep scoreboards fresh without websockets.",
+              accent: "bg-amber-500/20 text-amber-200",
+            },
+          ].map((card) => (
+            <div key={card.title} className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+              <div className={`inline-flex items-center justify-center w-12 h-12 rounded-2xl ${card.accent}`}>
+                <span className="text-lg font-bold">★</span>
+              </div>
+              <h3 className="mt-6 text-2xl font-bold text-white">{card.title}</h3>
+              <p className="mt-3 text-neutral-400 leading-relaxed">{card.body}</p>
+            </div>
+          ))}
+        </div>
+      </section>
     </main>
   );
 }

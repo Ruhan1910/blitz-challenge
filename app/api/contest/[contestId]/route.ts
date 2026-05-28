@@ -1,0 +1,170 @@
+import { NextResponse } from "next/server";
+import { getContest, setContest } from "@/lib/contest/store";
+import { hashPassword } from "@/lib/contest/utils";
+import { Contest, ContestHandle, ContestParticipant } from "@/lib/contest/types";
+import { generateProblemSet } from "@/lib/contest/generator";
+
+function normalizeHandles(input: any): ContestHandle[] {
+  if (!Array.isArray(input)) return [];
+  const result: ContestHandle[] = [];
+  for (const item of input) {
+    if (!item?.oj) continue;
+    if (typeof item.handle === "string" && item.handle.trim()) {
+      result.push({ oj: item.oj as any, handle: item.handle.trim() });
+    } else if (Array.isArray(item.handles)) {
+      for (const h of item.handles) {
+        if (typeof h === "string" && h.trim()) {
+          result.push({ oj: item.oj as any, handle: h.trim() });
+        }
+      }
+    }
+  }
+  return result;
+}
+
+function createParticipant(displayName: string, handles: ContestHandle[]): ContestParticipant {
+  return {
+    id: `p-${displayName.toLowerCase().replace(/\s+/g, "-")}-${Date.now().toString(36)}`,
+    displayName,
+    handles,
+    createdAt: Date.now(),
+  };
+}
+
+function scrubContest(contest: Contest) {
+  return {
+    ...contest,
+    settings: {
+      ...contest.settings,
+      passwordHash: null,
+      passwordSalt: null,
+    },
+  };
+}
+
+export async function GET(
+  request: Request,
+  { params }: { params: Promise<{ contestId: string }> }
+) {
+  const { contestId } = await params;
+  const contest = await getContest(contestId);
+
+  if (!contest) {
+    return NextResponse.json({ error: "Contest not found" }, { status: 404 });
+  }
+
+  return NextResponse.json({ contest: scrubContest(contest) });
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ contestId: string }> }
+) {
+  const { contestId } = await params;
+  const contest = await getContest(contestId);
+
+  if (!contest) {
+    return NextResponse.json({ error: "Contest not found" }, { status: 404 });
+  }
+
+  const payload = await request.json();
+
+  if (payload?.action === "verify") {
+    if (!contest.settings.requirePassword) {
+      return NextResponse.json({ authorized: true });
+    }
+
+    const salt = contest.settings.passwordSalt || "";
+    const hash = hashPassword(String(payload.password || ""), salt);
+
+    if (hash !== contest.settings.passwordHash) {
+      return NextResponse.json({ authorized: false }, { status: 401 });
+    }
+
+    return NextResponse.json({ authorized: true });
+  }
+
+  if (payload?.action === "join") {
+    const displayName = String(payload?.displayName || "").trim();
+    const handles = normalizeHandles(payload?.handles);
+
+    if (!displayName) {
+      return NextResponse.json({ error: "Display name is required." }, { status: 400 });
+    }
+
+    const requiredOjs = Array.from(new Set(contest.handles.map((handle) => handle.oj)));
+    const missing = requiredOjs.filter((oj) => !handles.some((handle) => handle.oj === oj));
+
+    if (missing.length > 0) {
+      return NextResponse.json({ error: "Handles for all contest judges are required." }, { status: 400 });
+    }
+
+    const existing = contest.participants.find(
+      (participant) => participant.displayName.toLowerCase() === displayName.toLowerCase()
+    );
+
+    if (existing) {
+      existing.handles = handles;
+    } else {
+      contest.participants.push(createParticipant(displayName, handles));
+    }
+
+    await setContest(contestId, contest);
+    return NextResponse.json({ contest: scrubContest(contest) });
+  }
+
+  if (payload?.action === "reset_starting") {
+    if (contest.status === "starting") {
+      contest.status = "waiting";
+      contest.errorMsg = "Problems not found within this settings.";
+      await setContest(contestId, contest);
+    }
+    return NextResponse.json({ contest: scrubContest(contest) });
+  }
+
+  if (payload?.action === "start" && contest.status === "waiting") {
+    if (contest.participants.length === 0) {
+      return NextResponse.json({ error: "At least one participant is required." }, { status: 400 });
+    }
+
+    contest.status = "starting";
+    contest.startRequestedAt = Date.now();
+    contest.errorMsg = null;
+    await setContest(contestId, contest);
+
+    (async () => {
+      try {
+        const participantHandles = contest.participants.flatMap((participant) => participant.handles);
+        const allHandles = [...contest.handles, ...participantHandles];
+
+        const problems = await generateProblemSet({
+          settings: contest.settings,
+          handles: allHandles,
+        });
+
+        const current = await getContest(contestId);
+        if (current && current.status === "starting") {
+          current.problems = problems;
+          current.status = "running";
+          current.settings.startTime = Date.now() + 3000;
+          current.currentProblemIndex = 0;
+          current.nextProblemUnlockedAt = null;
+          current.errorMsg = null;
+          await setContest(contestId, current);
+        }
+      } catch (err: any) {
+        console.error("Error generating problem set:", err);
+        const current = await getContest(contestId);
+        if (current && current.status === "starting") {
+          current.status = "waiting";
+          current.errorMsg = err.message || "Problems not found within this settings.";
+          await setContest(contestId, current);
+        }
+      }
+    })();
+
+    return NextResponse.json({ contest: scrubContest(contest) });
+  }
+
+  return NextResponse.json({ contest: scrubContest(contest) });
+}

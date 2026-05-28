@@ -1,0 +1,84 @@
+import { Contest, ContestSubmission } from "@/lib/contest/types";
+import { getProvider } from "@/lib/contest/providers";
+
+function buildHandleKey(oj: string, handle: string): string {
+  return `${oj}:${handle.toLowerCase()}`;
+}
+
+export async function syncContestSubmissions(contest: Contest): Promise<Contest> {
+  const startTime = contest.settings.startTime || contest.createdAt;
+  const problemMap = new Map<string, string>();
+
+  contest.problems.forEach((problem) => {
+    problemMap.set(`${problem.oj}:${problem.externalId}`, problem.id);
+  });
+
+  const newSubmissions: ContestSubmission[] = [];
+  const nowSeconds = Math.floor(Date.now() / 1000);
+
+  const seenHandles = new Set<string>();
+
+  for (const participant of contest.participants) {
+    for (const handleEntry of participant.handles) {
+      const handleKey = buildHandleKey(handleEntry.oj, handleEntry.handle);
+      if (seenHandles.has(handleKey)) continue;
+      seenHandles.add(handleKey);
+
+      const provider = getProvider(handleEntry.oj);
+      const since = contest.sync.lastFetchedAtByHandle[handleKey];
+
+      const recent = await provider.fetchRecentSubmissions(handleEntry.handle, since);
+
+      recent.forEach((submission) => {
+        const problemId = problemMap.get(`${submission.oj}:${submission.problemId}`);
+        if (!problemId) return;
+
+        const uniqueId = `${submission.oj}:${submission.id}`;
+        if (contest.sync.lastSubmissionIds[uniqueId]) return;
+
+        contest.sync.lastSubmissionIds[uniqueId] = true;
+
+        newSubmissions.push({
+          ...submission,
+          contestId: contest.id,
+          problemId,
+        });
+      });
+
+      contest.sync.lastFetchedAtByHandle[handleKey] = nowSeconds;
+    }
+  }
+
+  const mergedSubmissions = [...contest.submissions, ...newSubmissions].filter(
+    (submission) => submission.submittedAt >= startTime
+  );
+
+  contest.submissions = mergedSubmissions;
+  contest.sync.lastSyncedAt = Date.now();
+
+  if (contest.status === "running" && contest.settings.durationMinutes > 0 && contest.settings.startTime) {
+    const elapsed = Date.now() - contest.settings.startTime;
+    if (elapsed >= contest.settings.durationMinutes * 60 * 1000) {
+      contest.status = "finished";
+    }
+  }
+
+  if (contest.settings.mode === "blitz" && contest.problems.length > 0) {
+    const currentProblem = contest.problems[contest.currentProblemIndex];
+    if (currentProblem) {
+      const solved = contest.submissions.some(
+        (submission) => submission.problemId === currentProblem.id && submission.verdict === "OK"
+      );
+      if (solved) {
+        contest.currentProblemIndex = Math.min(contest.currentProblemIndex + 1, contest.problems.length - 1);
+        contest.nextProblemUnlockedAt = Date.now() + 60 * 1000;
+        contest.problems = contest.problems.map((problem, index) => ({
+          ...problem,
+          visible: contest.settings.mode === "standard" || index <= contest.currentProblemIndex,
+        }));
+      }
+    }
+  }
+
+  return contest;
+}
